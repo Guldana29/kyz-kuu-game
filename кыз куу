@@ -1,0 +1,89 @@
+class KyzKuuGame extends Phaser.Scene {
+    constructor() {
+        super({ key: 'KyzKuuGame' });
+    }
+
+    preload() {
+        this.load.image('background', 'background.png');
+        this.load.spritesheet('boy', 'boy_spritesheet.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('girl', 'girl_spritesheet.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.image('ground', 'ground.png');
+        this.load.audio('run_sound', 'run.mp3');
+        this.load.audio('win_sound', 'win.mp3');
+    }
+
+    create() {
+        this.add.image(400, 300, 'background');
+
+        this.ground = this.physics.add.staticGroup();
+        this.ground.create(400, 580, 'ground').setScale(2).refreshBody();
+
+        this.boy = this.physics.add.sprite(200, 500, 'boy');
+        this.girl = this.physics.add.sprite(100, 500, 'girl');
+
+        this.boy.setCollideWorldBounds(true);
+        this.girl.setCollideWorldBounds(true);
+
+        this.physics.add.collider(this.boy, this.ground);
+        this.physics.add.collider(this.girl, this.ground);
+
+        this.anims.create({
+            key: 'boy_run',
+            frames: this.anims.generateFrameNumbers('boy', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'girl_run',
+            frames: this.anims.generateFrameNumbers('girl', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.girl.setVelocityX(150);
+        this.girl.anims.play('girl_run', true);
+
+        this.runSound = this.sound.add('run_sound');
+        this.winSound = this.sound.add('win_sound');
+    }
+
+    update() {
+        if (this.cursors.right.isDown) {
+            this.boy.setVelocityX(200);
+            this.boy.anims.play('boy_run', true);
+            this.runSound.play();
+        } else {
+            this.boy.setVelocityX(0);
+            this.boy.anims.stop();
+            this.runSound.stop();
+        }
+
+        if (this.cursors.up.isDown && this.boy.body.touching.down) {
+            this.boy.setVelocityY(-300);
+        }
+
+        if (Phaser.Math.Distance.Between(this.boy.x, this.boy.y, this.girl.x, this.girl.y) < 50) {
+            this.winSound.play();
+            this.scene.restart();
+        }
+    }
+}
+
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 500 },
+            debug: false
+        }
+    },
+    scene: KyzKuuGame
+};
+
+const game = new Phaser.Game(config);
